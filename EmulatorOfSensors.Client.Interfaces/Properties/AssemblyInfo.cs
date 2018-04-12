@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Monitoring")]
+[assembly: AssemblyTitle("EmulatorOfSensors.Client.Interfaces")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("Monitoring")]
+[assembly: AssemblyProduct("EmulatorOfSensors.Client.Interfaces")]
 [assembly: AssemblyCopyright("Copyright ©  2018")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("b14ac5d2-38d2-4f5c-8c8a-1877fa385768")]
+[assembly: Guid("4d21ffff-8784-40c0-b353-93c27162233b")]
 
 // Version information for an assembly consists of the following four values:
 //

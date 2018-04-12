@@ -4,10 +4,10 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{B14AC5D2-38D2-4F5C-8C8A-1877FA385768}</ProjectGuid>
-    <OutputType>Exe</OutputType>
-    <RootNamespace>Monitoring</RootNamespace>
-    <AssemblyName>Monitoring</AssemblyName>
+    <ProjectGuid>{C1C9C3B3-16F7-4F61-B928-15C2542C1464}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>EmulatorOfSensors.Server</RootNamespace>
+    <AssemblyName>EmulatorOfSensors.Server</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -30,22 +30,25 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Program.cs" />
+    <Compile Include="FileStreamWrapper.cs" />
+    <Compile Include="Listener.cs" />
+    <Compile Include="Logger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Worker.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
+    <ProjectReference Include="..\EmulatorOfSensors.Helpers\EmulatorOfSensors.Helpers.csproj">
+      <Project>{525675F1-1AD1-45D3-B6A9-FC1585039226}</Project>
+      <Name>EmulatorOfSensors.Helpers</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
