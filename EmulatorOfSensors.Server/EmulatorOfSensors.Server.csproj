@@ -38,9 +38,9 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="FileStreamWrapper.cs" />
+    <Compile Include="SaversStorage.cs" />
+    <Compile Include="ValueSaver.cs" />
     <Compile Include="Listener.cs" />
-    <Compile Include="Logger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Worker.cs" />
   </ItemGroup>
@@ -48,6 +48,10 @@
     <ProjectReference Include="..\EmulatorOfSensors.Helpers\EmulatorOfSensors.Helpers.csproj">
       <Project>{525675F1-1AD1-45D3-B6A9-FC1585039226}</Project>
       <Name>EmulatorOfSensors.Helpers</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\EmulatorOfSensors.Server.Interfaces\EmulatorOfSensors.Server.Interfaces.csproj">
+      <Project>{F6D66791-2D14-4384-A673-8A242ECACEB0}</Project>
+      <Name>EmulatorOfSensors.Server.Interfaces</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

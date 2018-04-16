@@ -1,20 +1,18 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
-using System.Threading.Tasks;
 using EmulatorOfSensors.Client.Interfaces;
 
 namespace EmulatorOfSensors.Client.Sensors
 {
-    public delegate void SensorFailedHandler(object sender, Exception e);
-    public delegate void SensorEventHandler(object sender, int sensorId, int sensorValue);
-
     public class Sensor : ISensor
     {
+        #region | Fields |
+
         public event SensorEventHandler SensorBufferedEvent;
         public event SensorEventHandler SensorSendEvent;
         public event SensorFailedHandler SensorFailed;
@@ -22,111 +20,119 @@ namespace EmulatorOfSensors.Client.Sensors
         private TcpClient _tcpClient;
         private NetworkStream _stream;
 
-        private readonly Queue<int> _valuesBuffer;
+        private readonly ConcurrentQueue<int> _valuesBuffer;
 
         private readonly IPEndPoint _endPoint;
+        private readonly IValueGenerator _generator;
+
         private readonly int _sensorId;
         private readonly byte[] _sensorIdAsBytesArray;
 
-        private readonly Random _random;
         private readonly Timer _reconnectTimer;
 
+        #endregion
+
+        #region | Constructors |
 
         public Sensor()
         {
-            _random = new Random(Guid.NewGuid().GetHashCode());
-            _valuesBuffer = new Queue<int>();
+            _valuesBuffer = new ConcurrentQueue<int>();
 
-            _reconnectTimer = new Timer(ReConnectToServer, null, 0, 5000);
+            _reconnectTimer = new Timer(ReConnectToServer, null, 0, 0);
         }
 
-        public Sensor(IPEndPoint endPoint, int sensorId) : this()
+        public Sensor(IValueGenerator generator, IPEndPoint endPoint, int sensorId) : this()
         {
-            _endPoint = endPoint ?? throw new ArgumentNullException(nameof(endPoint));
+            _generator = generator;
+
+            _endPoint = endPoint;
             _sensorId = sensorId;
+
             _sensorIdAsBytesArray = BitConverter.GetBytes(_sensorId);
+        }
+
+        #endregion
+
+        public ISensor StartGenerate(int minValue = int.MinValue, int maxValue = int.MaxValue, int minTimeInterval = 1, int maxTimeInterval = 10000)
+        {
+            _generator.ValueGenerated += (sender, value) => NewValueGenerated(value);
+
+            _generator.Start(minValue, maxValue, minTimeInterval, maxTimeInterval);
+
+            return this;
         }
 
         private void ReConnectToServer(object state)
         {
             try
             {
+                _reconnectTimer.Change(Timeout.Infinite, Timeout.Infinite);
+
                 _tcpClient = new TcpClient(_endPoint.Address.ToString(), _endPoint.Port);
                 _stream = _tcpClient.GetStream();
-
-                _reconnectTimer.Change(Timeout.Infinite, Timeout.Infinite);
             }
             catch (Exception ex)
             {
-                OnSensorFailed(ex);
+                _reconnectTimer.Change(5000, 0);
+                OnSensorFailed($"SensorId:{_sensorId}", ex);
             } 
         }
 
-        public ISensor StartGenerate(int minValue = int.MinValue, int maxValue = int.MaxValue, int minTimeInterval = 1, int maxTimeInterval = 10000)
+        private void SendValues()
         {
-            Task.Factory.StartNew(() =>
+            try
             {
-                try
+                while (_stream != null && _stream.CanWrite 
+                                       && _valuesBuffer.Count > 0 
+                                       && _valuesBuffer.TryPeek(out var sensorBufferedValue))
                 {
-                    while (true)
-                    {
-                        var sensorValue = _random.Next(minValue, maxValue);
+                    var bytes = _sensorIdAsBytesArray
+                        .Concat(BitConverter.GetBytes(sensorBufferedValue))
+                        .ToArray();
 
-                        _valuesBuffer.Enqueue(sensorValue);
+                    _stream.Write(bytes, 0, bytes.Length);
 
-                        try
-                        {
-                            if (_stream != null && _stream.CanWrite)
-                            {
-                                while (_valuesBuffer.Count > 0)
-                                {
-                                    var sensorBufferedValue = _valuesBuffer.Peek();
+                    _valuesBuffer.TryDequeue(out var _);
 
-                                    var bytes = _sensorIdAsBytesArray
-                                        .Concat(BitConverter.GetBytes(sensorBufferedValue))
-                                        .ToArray();
-
-                                    _stream.Write(bytes, 0, bytes.Length);
-
-                                    _valuesBuffer.Dequeue();
-
-                                    OnSensorSendEvent(_sensorId, sensorBufferedValue);
-                                }
-                            }
-                            else
-                                OnSensorBufferedEvent(_sensorId, sensorValue);
-                        }
-                        catch (IOException e)
-                        {
-                            if (e.InnerException is SocketException innerExcception)
-                            {
-                                if (innerExcception.SocketErrorCode == SocketError.ConnectionReset) 
-
-                                _reconnectTimer.Change(0, 5000);
-                            }
-
-                            _stream?.Close();
-                            _tcpClient.Close();
-
-                            OnSensorFailed(e);
-                        }
-
-                        Thread.Sleep(_random.Next(minTimeInterval, maxTimeInterval));
-                    }
+                    OnSensorSendEvent(_sensorId, sensorBufferedValue);
                 }
-                catch (Exception e)
+            }
+            catch (IOException e)
+            {
+                if (e.InnerException is SocketException innerExcception)
                 {
-                    OnSensorFailed(e);
-                    throw;
+                    if (innerExcception.SocketErrorCode == SocketError.ConnectionReset)
+                        _reconnectTimer.Change(0, 0);
                 }
-            });
 
-            return this;
+                _stream?.Close();
+                _tcpClient.Close();
+
+                OnSensorFailed($"SensorId:{_sensorId}", e);
+            }
         }
 
-        protected virtual void OnSensorFailed(Exception ex)
+        private void NewValueGenerated(int sensorValue)
         {
-            SensorFailed?.Invoke(this, ex);
+            try
+            {
+                _valuesBuffer.Enqueue(sensorValue);
+
+                SendValues();
+
+                if (_valuesBuffer.Count > 0)
+                    OnSensorBufferedEvent(_sensorId, sensorValue);
+            }
+            catch (Exception e)
+            {
+                OnSensorFailed($"SensorId:{_sensorId}", e);
+                throw;
+            }
+        }
+
+        protected virtual void OnSensorFailed(string comment, Exception ex)
+        {
+            SensorFailed?.Invoke(this, comment, ex);
         }
 
         protected virtual void OnSensorSendEvent(int sensorId, int sensorValue)

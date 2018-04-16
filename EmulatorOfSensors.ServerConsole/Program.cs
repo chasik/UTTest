@@ -14,7 +14,7 @@ namespace EmulatorOfSensors.ServerConsole
             if (endPoint?.Address == null || endPoint.Port == 0)
                 ConsoleHelpers.RequestEndPoint(endPoint, Settings.Default.Address, Settings.Default.Port);
 
-            var logger = new Logger();
+            var valuesSavers = new SaversStorage();
 
             var listener = new Listener(endPoint);
 
@@ -22,7 +22,7 @@ namespace EmulatorOfSensors.ServerConsole
             {
                 Console.WriteLine($"{sensorId}\t{value}");
 
-                logger.AddValue(sensorId, value);
+                valuesSavers.SensorInfo(sensorId, value);
             };
 
             listener.ListenerFailed += ConsoleHelpers.OnFailed;

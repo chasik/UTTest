@@ -37,13 +37,13 @@ namespace EmulatorOfSensors.Helpers
             return uint.TryParse(enteredCount, out var newCount) ? newCount : defaultCount;
         }
 
-        public static void OnFailed(object sender, Exception exception)
+        public static void OnFailed(object sender, string comment, Exception exception)
         {
             lock (_locker)
             {
                 var oldTextColor = Console.ForegroundColor;
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine(exception.Message);
+                Console.WriteLine($"{comment} {exception.Message}");
                 Console.ForegroundColor = oldTextColor == ConsoleColor.Red ? ConsoleColor.White : oldTextColor;
             }
         }

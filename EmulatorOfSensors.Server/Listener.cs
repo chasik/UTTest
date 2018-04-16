@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Net;
 using System.Net.Sockets;
-using System.Threading.Tasks;
+using System.Threading;
 
 namespace EmulatorOfSensors.Server
 {
-    public delegate void TcpListenerFailedHandler(object sender, Exception e);
+    public delegate void TcpListenerFailedHandler(object sender, string comment, Exception e);
 
     public class Listener
     {
@@ -32,24 +32,23 @@ namespace EmulatorOfSensors.Server
 
                     var worker = new Worker(_server.AcceptTcpClient());
 
-                    worker.ReceiveSensorValue += OnReceiveSensorValue;
-
-                    Task.Factory.StartNew(() =>
+                    new Thread(() =>
                     {
                         try
                         {
+                            worker.ReceiveSensorValue += OnReceiveSensorValue;
                             worker.WaitData();
                         }
                         catch (Exception ex)
                         {
-                            OnListenerFailed(ex);
+                            OnListenerFailed("", ex);
                         }
-                    });
+                    }).Start();
                 }
             }
             catch (Exception e)
             {
-                OnListenerFailed(e);
+                OnListenerFailed("", e);
                 throw;
             }
             finally
@@ -58,9 +57,9 @@ namespace EmulatorOfSensors.Server
             }
         }
 
-        protected virtual void OnListenerFailed(Exception ex)
+        protected virtual void OnListenerFailed(string comment, Exception ex)
         {
-            ListenerFailed?.Invoke(this, ex);
+            ListenerFailed?.Invoke(this, comment, ex);
         }
 
         protected virtual void OnReceiveSensorValue(object sender, int sensorId, int sensorValue)
