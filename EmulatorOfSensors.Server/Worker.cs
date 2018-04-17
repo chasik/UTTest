@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net.Sockets;
 using System.Threading;
+using EmulatorOfSensors.Helpers;
 
 namespace EmulatorOfSensors.Server
 {
@@ -28,7 +29,8 @@ namespace EmulatorOfSensors.Server
                 {
                     if (stream.Read(bytes, 0, bytes.Length) != 0)
                     {
-                        OnReceiveSensorValue(BitConverter.ToInt32(bytes, 0), BitConverter.ToInt32(bytes, 4));
+                        var value = bytes.DeserializeToInt();
+                        OnReceiveSensorValue(value[0], value[1]);
                     }
                     else
                     {

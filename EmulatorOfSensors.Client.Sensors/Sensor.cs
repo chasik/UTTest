@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using EmulatorOfSensors.Client.Interfaces;
+using EmulatorOfSensors.Helpers;
 
 namespace EmulatorOfSensors.Client.Sensors
 {
@@ -62,6 +63,8 @@ namespace EmulatorOfSensors.Client.Sensors
             return this;
         }
 
+        #region | Private methods |
+
         private void ReConnectToServer(object state)
         {
             try
@@ -86,9 +89,7 @@ namespace EmulatorOfSensors.Client.Sensors
                                        && _valuesBuffer.Count > 0 
                                        && _valuesBuffer.TryPeek(out var sensorBufferedValue))
                 {
-                    var bytes = _sensorIdAsBytesArray
-                        .Concat(BitConverter.GetBytes(sensorBufferedValue))
-                        .ToArray();
+                    var bytes = _sensorIdAsBytesArray.SerializeForSend(sensorBufferedValue);
 
                     _stream.Write(bytes, 0, bytes.Length);
 
@@ -130,6 +131,10 @@ namespace EmulatorOfSensors.Client.Sensors
             }
         }
 
+        #endregion
+
+        #region | Events invocators |
+
         protected virtual void OnSensorFailed(string comment, Exception ex)
         {
             SensorFailed?.Invoke(this, comment, ex);
@@ -144,5 +149,7 @@ namespace EmulatorOfSensors.Client.Sensors
         {
             SensorBufferedEvent?.Invoke(this, sensorId, sensorValue);
         }
+
+        #endregion
     }
 }

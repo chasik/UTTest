@@ -43,6 +43,10 @@
       <Project>{4D21FFFF-8784-40C0-B353-93C27162233B}</Project>
       <Name>EmulatorOfSensors.Client.Interfaces</Name>
     </ProjectReference>
+    <ProjectReference Include="..\EmulatorOfSensors.Helpers\EmulatorOfSensors.Helpers.csproj">
+      <Project>{525675F1-1AD1-45D3-B6A9-FC1585039226}</Project>
+      <Name>EmulatorOfSensors.Helpers</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

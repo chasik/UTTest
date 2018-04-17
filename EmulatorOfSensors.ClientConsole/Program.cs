@@ -1,4 +1,5 @@
 ﻿using System;
+using EmulatorOfSensors.Client.Sensors;
 using EmulatorOfSensors.ClientConsole.Properties;
 using EmulatorOfSensors.Helpers;
 
@@ -20,7 +21,7 @@ namespace EmulatorOfSensors.ClientConsole
             for (var id = 1; id <= sensorsCount; id++)
             {
                 var newSensorId = id;
-                var sensor = SensorFactory.Create(endPoint, newSensorId);
+                var sensor = new Sensor(new Generator(), endPoint, newSensorId);
 
                 sensor.SensorSendEvent += (sender, sensorId, value) => { Console.WriteLine($"{sensorId}\t{value}\tsended"); };
                 sensor.SensorBufferedEvent += (sender, sensorId, value) => { Console.WriteLine($"{sensorId}\t{value}\tbuffered"); };

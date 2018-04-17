@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading;
-using System.Threading.Tasks;
 using EmulatorOfSensors.Client.Interfaces;
 
 namespace EmulatorOfSensors.Client.Sensors
@@ -19,6 +18,9 @@ namespace EmulatorOfSensors.Client.Sensors
 
         public void Start(int minValue, int maxValue, int minTimeInterval, int maxTimeInterval)
         {
+            if (minTimeInterval < 1)
+                throw new ArgumentOutOfRangeException();
+
             _generatorThread = new Thread(() =>
             {
                 while (true)
@@ -32,6 +34,11 @@ namespace EmulatorOfSensors.Client.Sensors
             });
 
             _generatorThread.Start();
+        }
+
+        public void Stop()
+        {
+            _generatorThread?.Abort();
         }
 
         protected virtual void OnValueGenerated(int value)
